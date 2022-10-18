@@ -1,31 +1,21 @@
 # experimental
 
-from threading import Thread
+from managers import Action_Manager
+import actions
 import socketio
-import vlc
 
 
+action_Manager = Action_Manager()
+action_Manager.extendModule(actions)
 sio = socketio.Client()
 sio.connect('http://127.0.0.1:3080')
 print("connected to nexa server")
-
-vlcInstance = None
-player = None
 
 
 print("I need a room key, you can request it to me on telegram")
 room_key = input("room key: ")
 sio.emit("connect_to_room", room_key)
 
-
-def play_sound(data):
-	global vlcInstance, player
-	if not vlcInstance:
-		vlcInstance = vlc.Instance()
-		player = vlcInstance.media_player_new()
-	media = vlcInstance.media_new(data)
-	player.set_media(media)
-	player.play()
 
 
 @sio.on('connected_to_room')
@@ -40,22 +30,9 @@ def room_key_error(data):
 	sio.emit("connect_to_room", room_key)
 
 
-@sio.on('play_audio')
-def play_audio(data):
-	print("executing play_sound method.")
-	play_sound(data)
-
-
-@sio.on('stop_audio')
-def stop_audio():
-	if player: player.stop()
-
-
-@sio.on('pause_audio')
-def pause_audio():
-	if player: player.pause()
-
-
-@sio.on('resume_audio')
-def resume_audio():
-	if player: player.play()
+@sio.on('execute_order')
+def execute_order(order):
+	try:
+		action_Manager.execute(order["label"], order.get("data"))
+	except Exception as e:
+		print("Error (execute_order)", e)
