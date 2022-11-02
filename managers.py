@@ -19,8 +19,9 @@ class Action_Manager:
 
 
 	def extendModule(self, module):
-	for name, val in module.__dict__.items():
-		if callable(val): self.extend(label=name, action=val)
+		for name, val in module.__dict__.items():
+			print(f"({name}) is available")
+			if callable(val): self.extend(label=name, action=val)
 
 
 	def extend(self, label, action):
